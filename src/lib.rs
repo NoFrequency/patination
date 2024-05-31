@@ -1,6 +1,10 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod database;
+use database::Database;
+
+pub mod miner;
+use miner::Miner;
+
+/*
 
 #[cfg(test)]
 mod tests {
@@ -12,3 +16,4 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+ */
