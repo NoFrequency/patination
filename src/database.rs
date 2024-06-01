@@ -1,6 +1,6 @@
 pub struct Database {
-    data: Vec<Vec<u8>>,
-    total_length: usize,
+    pub data: Vec<Vec<u8>>,
+    pub total_length: usize,
 }
 
 impl From<&[String]> for Database {
