@@ -10,6 +10,7 @@ pub struct CodeTable {
     data: Database,
     table: Vec<Pattern>,
     usage: HashMap<usize, usize>,
+    covered: bool,
 }
 
 impl CodeTable {
@@ -18,11 +19,18 @@ impl CodeTable {
             data,
             table: vec![Pattern::zero(), Pattern::one()],
             usage: HashMap::new(),
+            covered: false,
         }
     }
 
     /// updates CodeTable usage by covering the database with the current table.
     pub fn cover(&mut self) {
+        // Preconditions
+        if self.covered {
+            return;
+        }
+        self.usage = HashMap::new();
+
         // Naive, without gaps?: always pick first matching pattern from table.
         // TODO: optimize matching with a binary tree?
         for data in &self.data.data {
@@ -63,6 +71,27 @@ impl CodeTable {
                 }
             }
         }
+        self.covered = true;
+    }
+
+    /// Size of Codetable + Size of encoded dataset
+    pub fn mdl_size(&mut self) -> f64 {
+        // Preconditions
+        if !self.covered {
+            self.cover();
+        }
+
+        // L(D | CT)
+        let total_usage = self.usage.len() as f64;
+        let mut d_ct = 0f64;
+        for (_, pattern_usage) in &self.usage {
+            d_ct += (*pattern_usage as f64 / total_usage).log2() * total_usage;
+        }
+        // L(C)
+        let mut c = 0.;
+
+        // Return the sum
+        d_ct + c
     }
 }
 
@@ -78,5 +107,16 @@ mod tests {
         ct.cover();
         assert_eq!(ct.usage.get(&0).unwrap(), &94usize);
         assert_eq!(ct.usage.get(&1).unwrap(), &106usize);
+    }
+
+    #[test]
+    fn mdl_size_test() {
+        let sample_synthetic_data: &[String] =
+            &["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbb".to_string()];
+        let database = Database::from(sample_synthetic_data);
+
+        let mut ct = CodeTable::new(database);
+        ct.cover();
+        assert_eq!(ct.mdl_size(), 0.);
     }
 }
